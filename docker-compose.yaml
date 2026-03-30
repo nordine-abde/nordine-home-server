@@ -1,0 +1,43 @@
+services: 
+  caddy:
+    build:
+      context: ./caddy
+    restart: unless-stopped
+    env_file:
+      - ./caddy/.env
+    ports:
+      - 80:80
+    volumes: 
+      - ${CADDY_DATA_FOLDER}:/data
+      - ${CADDY_CONFIG_FILE}:/config
+    networks:
+      - internal_server_net
+  filebrowser:
+    image: filebrowser/filebrowser
+    container_name: filebrowser
+    envirnonment:
+      - PUID=${FILE_BROWSER_USER_ID:-1000}
+      - PGID=${FILE_BROWSER_USER_GROUP:-1000}
+    volumes:
+      - ${FILE_BROWSER_SRV_FOLDER}:/srv
+      - ${FILE_BROWSER_DATABASE_FOLDER}:/database
+      - ${FILE_BROWSER_CONFIG_FOLDER}:/config
+    ports:
+      - 8001:80
+    restart: unless-stopped
+    networks:
+      - internal_server_net
+  dns:
+    image: strm/dnsmasq
+    volumes: ${DNS_MASK_CONFIG_FILE}:/etc/dnsmasq.conf
+    ports: "53:53/udp"
+    cap_add:
+      - NET_ADMIN
+    netwroks:
+      internal_server_net
+
+networks:
+    internal_server_net:
+        name: internal_server_net
+
+
