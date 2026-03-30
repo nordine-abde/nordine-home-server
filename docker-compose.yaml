@@ -17,9 +17,6 @@ services:
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
-    environment:
-      PUID: ${FILE_BROWSER_USER_ID}
-      PGID: ${FILE_BROWSER_USER_GROUP}
     volumes:
       - ${FILE_BROWSER_SRV_FOLDER}:/srv
       - ${FILE_BROWSER_DATABASE_FOLDER}:/database
