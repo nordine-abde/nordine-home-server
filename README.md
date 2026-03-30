@@ -1,3 +1,7 @@
+My home server setup
+
+**Work in progress**
+
 # Nordine Home Server
 
 Home server setup based on Docker Compose, Caddy, and utility shell scripts.
