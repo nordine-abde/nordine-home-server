@@ -16,6 +16,7 @@ cp .env-example .env
 Then update the copied file with the correct paths, IDs, server `IP`, and `DOMAIN` for your machine.
 
 The DNS container renders its `dnsmasq` config automatically from `IP` and `DOMAIN` in the root `.env`.
+Set `CADDY_AUTO_SSL=false` if you want to disable Caddy automatic HTTPS.
 
 ## Run
 Validate the configuration:

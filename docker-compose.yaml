@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN}
+      AUTO_SSL: ${CADDY_AUTO_SSL:-true}
     ports:
       - "80:80"
       - "443:443"
