@@ -3,8 +3,8 @@ services:
     build:
       context: ./config/caddy
     restart: unless-stopped
-    env_file:
-      - ./config/caddy/.env
+    environment:
+      DOMAIN: ${DOMAIN}
     ports:
       - "80:80"
       - "443:443"
@@ -27,9 +27,11 @@ services:
     networks:
       - internal_server_net
   dns:
-    image: strm/dnsmasq
-    volumes:
-      - ${DNSMASQ_CONFIG_FILE}:/etc/dnsmasq.conf:ro
+    build:
+      context: ./config/dns
+    environment:
+      DOMAIN: ${DOMAIN}
+      IP: ${IP}
     ports:
       - "53:53/udp"
     cap_add:

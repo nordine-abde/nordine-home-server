@@ -7,14 +7,15 @@ My home server setup
 Home server setup based on Docker Compose, Caddy, and utility shell scripts.
 
 ## Setup
-Copy the example env files, rename them to `.env`, and edit the values before starting services.
+Copy the example env file, rename it to `.env`, and edit the values before starting services.
 
 ```bash
 cp .env-example .env
-cp config/caddy/.env-example config/caddy/.env
 ```
 
-Then update the copied files with the correct paths, IDs, and domain for your machine.
+Then update the copied file with the correct paths, IDs, server `IP`, and `DOMAIN` for your machine.
+
+The DNS container renders its `dnsmasq` config automatically from `IP` and `DOMAIN` in the root `.env`.
 
 ## Run
 Validate the configuration:
@@ -28,5 +29,3 @@ Start the stack:
 ```bash
 docker compose up -d
 ```
-
-

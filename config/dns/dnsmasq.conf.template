@@ -1,0 +1,2 @@
+# Resolve the local domain to the server IP.
+address=/${DOMAIN}/${IP}
