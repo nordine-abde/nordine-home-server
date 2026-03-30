@@ -9,7 +9,7 @@ GLOBAL_OPTIONS=""
 REDIRECT_SCHEME="https"
 
 if [ "$AUTO_SSL" = "false" ]; then
-  GLOBAL_OPTIONS="{\n  auto_https off\n}"
+  GLOBAL_OPTIONS="$(printf '{\n  auto_https off\n}\n')"
   REDIRECT_SCHEME="http"
 fi
 
