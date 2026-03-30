@@ -1,43 +1,42 @@
-services: 
+services:
   caddy:
     build:
-      context: ./caddy
+      context: ./config/caddy
     restart: unless-stopped
     env_file:
-      - ./caddy/.env
+      - ./config/caddy/.env
     ports:
-      - 80:80
-    volumes: 
+      - "80:80"
+      - "443:443"
+    volumes:
       - ${CADDY_DATA_FOLDER}:/data
-      - ${CADDY_CONFIG_FILE}:/config
+      - ${CADDY_CONFIG_FOLDER}:/config
     networks:
       - internal_server_net
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
-    envirnonment:
-      - PUID=${FILE_BROWSER_USER_ID:-1000}
-      - PGID=${FILE_BROWSER_USER_GROUP:-1000}
+    environment:
+      PUID: ${FILE_BROWSER_USER_ID}
+      PGID: ${FILE_BROWSER_USER_GROUP}
     volumes:
       - ${FILE_BROWSER_SRV_FOLDER}:/srv
       - ${FILE_BROWSER_DATABASE_FOLDER}:/database
       - ${FILE_BROWSER_CONFIG_FOLDER}:/config
-    ports:
-      - 8001:80
     restart: unless-stopped
     networks:
       - internal_server_net
   dns:
     image: strm/dnsmasq
-    volumes: ${DNS_MASK_CONFIG_FILE}:/etc/dnsmasq.conf
-    ports: "53:53/udp"
+    volumes:
+      - ${DNSMASQ_CONFIG_FILE}:/etc/dnsmasq.conf:ro
+    ports:
+      - "53:53/udp"
     cap_add:
       - NET_ADMIN
-    netwroks:
-      internal_server_net
+    networks:
+      - internal_server_net
 
 networks:
-    internal_server_net:
-        name: internal_server_net
-
-
+  internal_server_net:
+    name: internal_server_net
