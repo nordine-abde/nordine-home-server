@@ -31,7 +31,7 @@ services:
       DOMAIN: ${DOMAIN}
       IP: ${IP}
       UPSTREAM_DNS_1: ${UPSTREAM_DNS_1}
-      UPSTREAM_DNS_2: ${UPSTREAM_DNS_2:-8.8.8.8}
+       UPSTREAM_DNS_2: ${UPSTREAM_DNS_2:-8.8.8.8}
     ports:
       - "53:53/udp"
       - "53:53/tcp"
