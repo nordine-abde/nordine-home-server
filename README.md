@@ -18,9 +18,8 @@ Copy the example env file, rename it to `.env`, and edit the values before start
 cp .env-example .env
 ```
 
-Then update the copied file with the correct paths, IDs, server `IP`, and `DOMAIN` for your machine.
+Then update the copied file with the correct paths and `DOMAIN` for your machine.
 
-The DNS container renders its `dnsmasq` config automatically from `IP` and `DOMAIN` in the root `.env`.
 Set `REDIRECT_SCHEME` in `.env` to control whether `/filebrowser` redirects to `http://` or `https://`.
 
 ## Run

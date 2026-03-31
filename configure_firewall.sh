@@ -33,15 +33,11 @@ sudo iptables -A INPUT -p icmp -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-sudo iptables -A INPUT -p udp --dport 53 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 53 -j ACCEPT
 
 sudo ip6tables -A INPUT -p ipv6-icmp -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 22 -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 443 -j ACCEPT
-sudo ip6tables -A INPUT -p udp --dport 53 -j ACCEPT
-sudo ip6tables -A INPUT -p tcp --dport 53 -j ACCEPT
 
 if ! dpkg -s iptables-persistent >/dev/null 2>&1; then
   sudo apt update
