@@ -12,7 +12,8 @@ fi
 if [ "$FORCE_FLAG" != "--force" ]; then
   echo "Warning: this setup is intended for a fresh Ubuntu machine."
   echo "It will install Docker, reconfigure host DNS behavior, enable rootless Docker,"
-  echo "grant privileged port binding to rootless Docker, and rebuild the firewall rules."
+  echo "grant privileged port binding to rootless Docker, resize the main disk,"
+  echo "and rebuild the firewall rules."
   echo
   read -r -p "Continue with full machine setup? [y/N] " confirm
   if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
@@ -35,6 +36,7 @@ cd "$REPO_ROOT"
 run_step "Installing Docker and Compose" bash "$REPO_ROOT/install_docker.sh"
 run_step "Configuring rootless Docker" bash "$REPO_ROOT/make_docker_rootless.sh"
 run_step "Allowing privileged ports for rootless Docker" bash "$REPO_ROOT/allow_privileged_ports_to_rootless_docker.sh"
+run_step "Resizing the main disk" bash "$REPO_ROOT/resize_main_disk.sh" ${FORCE_FLAG:+"$FORCE_FLAG"}
 run_step "Freeing host port 53 for the DNS container" bash "$REPO_ROOT/configure_primary_dns_host.sh" ${FORCE_FLAG:+"$FORCE_FLAG"}
 run_step "Rebuilding the firewall rules" bash "$REPO_ROOT/configure_firewall.sh" ${FORCE_FLAG:+"$FORCE_FLAG"}
 
