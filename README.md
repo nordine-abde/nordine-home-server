@@ -4,8 +4,8 @@ My home server setup
 
 ## Warning
 Some scripts in this repository make system-level changes and may have destructive side effects, including replacing configuration, changing firewall rules, or reconfiguring host services.
-
 They are intended to be reviewed first and run on a fresh machine you are preparing for this setup, not on an already-configured server you are trying to preserve.
+These scripts have already caused enough errors during development that the machine had to be fully reset multiple times. Assume destructive behavior is possible and plan accordingly.
 
 # Nordine Home Server
 
