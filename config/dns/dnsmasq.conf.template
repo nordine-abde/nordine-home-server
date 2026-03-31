@@ -1,2 +1,15 @@
+domain-needed
+bogus-priv
+no-resolv
+
+# Serve the local zone locally.
+local=/${DOMAIN}/
+domain=${DOMAIN}
+expand-hosts
+
 # Resolve the local domain to the server IP.
 address=/${DOMAIN}/${IP}
+
+# Forward non-local queries to the configured upstream resolvers.
+server=${UPSTREAM_DNS_1}
+server=${UPSTREAM_DNS_2}

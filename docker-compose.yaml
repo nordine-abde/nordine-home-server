@@ -30,10 +30,11 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
       IP: ${IP}
+      UPSTREAM_DNS_1: ${UPSTREAM_DNS_1}
+      UPSTREAM_DNS_2: ${UPSTREAM_DNS_2:-8.8.8.8}
     ports:
       - "53:53/udp"
-    cap_add:
-      - NET_ADMIN
+      - "53:53/tcp"
     networks:
       - internal_server_net
 
