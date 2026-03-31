@@ -2,6 +2,11 @@ My home server setup
 
 **Work in progress**
 
+## Warning
+Some scripts in this repository make system-level changes and may have destructive side effects, including replacing configuration, changing firewall rules, or reconfiguring host services.
+
+They are intended to be reviewed first and run on a fresh machine you are preparing for this setup, not on an already-configured server you are trying to preserve.
+
 # Nordine Home Server
 
 Home server setup based on Docker Compose, Caddy, and utility shell scripts.
