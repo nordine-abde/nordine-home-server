@@ -3,12 +3,8 @@ services:
     build:
       context: ./config/caddy
     restart: unless-stopped
-    environment:
-      DOMAIN: ${DOMAIN}
-      REDIRECT_SCHEME: ${REDIRECT_SCHEME:-http}
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ${CADDY_DATA_FOLDER}:/data
       - ${CADDY_CONFIG_FOLDER}:/config

@@ -44,6 +44,6 @@ echo "Full machine setup completed."
 echo
 echo "Next steps:"
 echo "  1. Copy .env-example to .env"
-echo "  2. Set DOMAIN and any path overrides"
+echo "  2. Set any path overrides"
 echo "  3. Run docker compose config"
 echo "  4. Run docker compose up -d"
