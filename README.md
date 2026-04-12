@@ -18,9 +18,9 @@ Copy the example env file, rename it to `.env`, and edit the values before start
 cp .env-example .env
 ```
 
-Then update the copied file with the correct paths for your machine.
+Then update the copied file with the correct paths and `DOMAIN` for your machine.
 
-The stack is served over plain HTTP and is reachable directly by server IP, for example `http://192.168.1.10/` and `http://192.168.1.10/filebrowser/`.
+Set `REDIRECT_SCHEME` in `.env` to control whether `/filebrowser` redirects to `http://` or `https://`.
 
 ## Run
 Validate the configuration:

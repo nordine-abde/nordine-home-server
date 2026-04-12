@@ -1,7 +1,9 @@
-:80 {
+{$REDIRECT_SCHEME:http}://{$DOMAIN} {
   root * /srv
-  handle_path /filebrowser* {
-    reverse_proxy filebrowser:80
-  }
+  redir /filebrowser {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN}
   file_server
+}
+
+{$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN} {
+  reverse_proxy filebrowser:80
 }
