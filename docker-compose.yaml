@@ -2,6 +2,8 @@ services:
   caddy:
     build:
       context: ./config/caddy
+      additional_contexts:
+        medical-manager-frontend-source: https://github.com/nordine-abde/medical-manager.git#main:frontend
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN}
@@ -12,6 +14,52 @@ services:
     volumes:
       - ${CADDY_DATA_FOLDER}:/data
       - ${CADDY_CONFIG_FOLDER}:/config
+    networks:
+      - internal_server_net
+  medical-manager-backend:
+    build:
+      context: https://github.com/nordine-abde/medical-manager.git#main:backend
+    restart: unless-stopped
+    depends_on:
+      medical-manager-postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "bun run db:migrate && bun run start"]
+    environment:
+      APP_NAME: medical-manager-backend
+      API_PREFIX: /api/v1
+      HOST: 0.0.0.0
+      PORT: ${MEDICAL_MANAGER_API_PORT:-3000}
+      BETTER_AUTH_URL: ${MEDICAL_MANAGER_BETTER_AUTH_URL:?Set MEDICAL_MANAGER_BETTER_AUTH_URL in .env}
+      BETTER_AUTH_SECRET: ${MEDICAL_MANAGER_BETTER_AUTH_SECRET:?Set MEDICAL_MANAGER_BETTER_AUTH_SECRET in .env}
+      DATABASE_URL: postgres://${MEDICAL_MANAGER_POSTGRES_USER:-medical_manager}:${MEDICAL_MANAGER_POSTGRES_PASSWORD:?Set MEDICAL_MANAGER_POSTGRES_PASSWORD in .env}@medical-manager-postgres:5432/${MEDICAL_MANAGER_POSTGRES_DB:-medical_manager}
+      DATABASE_SCHEMA: ${MEDICAL_MANAGER_DATABASE_SCHEMA:-app}
+      DATABASE_SSL: "false"
+      DATABASE_MAX_CONNECTIONS: ${MEDICAL_MANAGER_DATABASE_MAX_CONNECTIONS:-10}
+      DOCUMENTS_STORAGE_ROOT: /app/data/documents
+      TELEGRAM_BOT_TOKEN: ${MEDICAL_MANAGER_TELEGRAM_BOT_TOKEN:-}
+    volumes:
+      - ${MEDICAL_MANAGER_DOCUMENTS_FOLDER:-./data/medical-manager/documents}:/app/data/documents
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const response = await fetch('http://127.0.0.1:3000/api/v1/health/'); process.exit(response.ok ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_server_net
+  medical-manager-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MEDICAL_MANAGER_POSTGRES_DB:-medical_manager}
+      POSTGRES_USER: ${MEDICAL_MANAGER_POSTGRES_USER:-medical_manager}
+      POSTGRES_PASSWORD: ${MEDICAL_MANAGER_POSTGRES_PASSWORD:?Set MEDICAL_MANAGER_POSTGRES_PASSWORD in .env}
+    volumes:
+      - ${MEDICAL_MANAGER_POSTGRES_DATA_FOLDER:-./data/medical-manager/postgres}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MEDICAL_MANAGER_POSTGRES_USER:-medical_manager} -d ${MEDICAL_MANAGER_POSTGRES_DB:-medical_manager}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal_server_net
   filebrowser:

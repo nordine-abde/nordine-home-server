@@ -1,9 +1,21 @@
 {$REDIRECT_SCHEME:http}://{$DOMAIN} {
-  root * /srv
-  redir /filebrowser {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN}
-  file_server
+	root * /srv
+	redir /filebrowser {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN}
+	redir /medical-manager {$REDIRECT_SCHEME:http}://medical-manager.{$DOMAIN}
+	file_server
 }
 
 {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN} {
-  reverse_proxy filebrowser:80
+	reverse_proxy filebrowser:80
+}
+
+{$REDIRECT_SCHEME:http}://medical-manager.{$DOMAIN} {
+	root * /srv/medical-manager
+
+	handle /api/* {
+		reverse_proxy medical-manager-backend:3000
+	}
+
+	try_files {path} /index.html
+	file_server
 }
