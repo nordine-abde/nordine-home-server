@@ -27,10 +27,11 @@
 		reverse_proxy medical-manager-backend:3000
 	}
 
-	try_files {path} /index.html
-	file_server
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
 
-	# Access logs (HTTP requests)
 	log {
 		output file /var/log/caddy/access.log {
 			roll_size 100mb
