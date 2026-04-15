@@ -38,6 +38,7 @@ services:
       DATABASE_MAX_CONNECTIONS: ${MEDICAL_MANAGER_DATABASE_MAX_CONNECTIONS:-10}
       DOCUMENTS_STORAGE_ROOT: /app/data/documents
       TELEGRAM_BOT_TOKEN: ${MEDICAL_MANAGER_TELEGRAM_BOT_TOKEN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - ${MEDICAL_MANAGER_DOCUMENTS_FOLDER:-./data/medical-manager/documents}:/app/data/documents
     healthcheck:
