@@ -8,6 +8,7 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
       REDIRECT_SCHEME: ${REDIRECT_SCHEME:-http}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "80:80"
       - "443:443"

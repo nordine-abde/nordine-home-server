@@ -26,6 +26,6 @@
             roll_keep_for 2160h
         }
         format json
-        level INFO
+        level {$LOG_LEVEL:INFO}
     }
 }
