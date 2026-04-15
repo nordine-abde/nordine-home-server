@@ -18,4 +18,14 @@
 
 	try_files {path} /index.html
 	file_server
+
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 10
+            roll_keep_for 2160h
+        }
+        format json
+        level INFO
+    }
 }
