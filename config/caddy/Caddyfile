@@ -1,7 +1,18 @@
+{
+	# Global options block (controls Caddy runtime logs)
+	log default {
+		level {$LOG_LEVEL:INFO}
+		format json
+		output stdout
+	}
+}
+
 {$REDIRECT_SCHEME:http}://{$DOMAIN} {
 	root * /srv
+
 	redir /filebrowser {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN}
 	redir /medical-manager {$REDIRECT_SCHEME:http}://medical-manager.{$DOMAIN}
+
 	file_server
 }
 
@@ -19,13 +30,13 @@
 	try_files {path} /index.html
 	file_server
 
-    log {
-        output file /var/log/caddy/access.log {
-            roll_size 100mb
-            roll_keep 10
-            roll_keep_for 2160h
-        }
-        format json
-        level {$LOG_LEVEL:INFO}
-    }
+	# Access logs (HTTP requests)
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 100mb
+			roll_keep 10
+			roll_keep_for 2160h
+		}
+		format json
+	}
 }
