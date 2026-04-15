@@ -39,6 +39,8 @@ services:
       DOCUMENTS_STORAGE_ROOT: /app/data/documents
       TELEGRAM_BOT_TOKEN: ${MEDICAL_MANAGER_TELEGRAM_BOT_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "${MEDICAL_MANAGER_API_PORT:-3000}"
     volumes:
       - ${MEDICAL_MANAGER_DOCUMENTS_FOLDER:-./data/medical-manager/documents}:/app/data/documents
     healthcheck:
