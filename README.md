@@ -1,27 +1,43 @@
 # Nordine Home Server
 
-Small home-server setup for running a few personal services behind Caddy with
-Docker Compose.
+A small self-hosted infrastructure project that turns an old laptop into a
+local home server using Ubuntu, rootless Docker, Docker Compose, Caddy, and a
+few automation scripts.
 
-The repository contains two different kinds of automation:
+The goal of this repository is to keep the server setup reproducible and easy
+to review. It documents both the machine bootstrap process and the application
+stack that runs after the host is prepared.
 
-- host setup scripts, intended for a fresh Ubuntu machine
-- Docker Compose configuration, used to run the long-lived services
+## Overview
 
-## Warning
+The stack is designed for a local network, not for direct internet exposure.
+Services are reached by local IP address or by local DNS names configured
+outside this repository.
 
-Some scripts in this repository make system-level changes and can be
-destructive. They install packages, disable the system Docker daemon, configure
-rootless Docker, grant extra capabilities, resize the main logical volume, and
-replace firewall rules.
+Main components:
 
-Review every script before running it. These scripts are intended for a fresh
-machine prepared for this setup, not for an already configured server that you
-need to preserve.
+- Host bootstrap scripts for Ubuntu-based machines
+- Rootless Docker for running services without the system Docker daemon
+- Docker Compose for service orchestration
+- Caddy as the internal reverse proxy and static web server
+- File Browser for local file access
+- Medical Manager backend, frontend, and Postgres database
 
-## Services
+DNS and hostname resolution are intentionally left outside the repository. They
+can be handled by a router, a local DNS server, or client-side hosts files.
 
-`docker-compose.yaml` currently runs:
+## Target Hardware
+
+The current target machine is an old Acer Aspire A315-21G laptop repurposed as
+a small home server.
+
+- CPU: AMD A9-9420 with integrated Radeon graphics
+- Memory: 8 GiB DDR4 RAM
+- Storage: 256 GB SATA SSD
+
+## Architecture
+
+`docker-compose.yaml` defines the long-running services:
 
 - `caddy`: reverse proxy and static web server
 - `filebrowser`: browser-based file manager
@@ -29,30 +45,33 @@ need to preserve.
   `https://github.com/nordine-abde/medical-manager.git#main:backend`
 - `medical-manager-postgres`: Postgres database for Medical Manager
 
-Caddy also builds and serves the Medical Manager frontend from
-`https://github.com/nordine-abde/medical-manager.git#main:frontend`.
+The Caddy image also builds the Medical Manager frontend from
+`https://github.com/nordine-abde/medical-manager.git#main:frontend` and serves
+it as static files.
 
-The main site is served at `${REDIRECT_SCHEME}://${DOMAIN}` and redirects:
+Routing:
 
-- `/filebrowser` to `filebrowser.${DOMAIN}`
-- `/medical-manager` to `medical-manager.${DOMAIN}`
+- `${REDIRECT_SCHEME}://${DOMAIN}` serves the landing page
+- `/filebrowser` redirects to `filebrowser.${DOMAIN}`
+- `/medical-manager` redirects to `medical-manager.${DOMAIN}`
+- `medical-manager.${DOMAIN}/api/*` proxies to the backend container
 
-## Fresh Machine Setup
+## Host Setup
 
-Run the full host setup only on the intended Ubuntu server:
+The full host bootstrap is handled by:
 
 ```bash
 bash full_setup.sh
 ```
 
-The script asks for confirmation before making changes. To skip its confirmation
-prompt and the prompts in the destructive sub-steps:
+This script is intended for a fresh Ubuntu machine. It prompts before making
+system-level changes. To skip confirmations:
 
 ```bash
 bash full_setup.sh --force
 ```
 
-`full_setup.sh` runs these scripts in order:
+`full_setup.sh` runs these steps in order:
 
 1. `install_docker.sh`
 2. `make_docker_rootless.sh`
@@ -60,138 +79,107 @@ bash full_setup.sh --force
 4. `resize_main_disk.sh`
 5. `configure_firewall.sh`
 
-After it completes, create `.env`, validate Compose, and start the stack.
+### Bootstrap scripts
 
-## Setup Scripts
+`install_docker.sh` adds Docker's official Ubuntu APT repository and installs
+Docker Engine, Buildx, and the Compose plugin.
 
-### `install_docker.sh`
+`make_docker_rootless.sh` installs `uidmap`, runs Docker's rootless setup tool,
+and disables the system Docker service and socket.
 
-Adds Docker's official Ubuntu APT repository and installs:
+`allow_privileged_ports_to_rootless_docker.sh` grants
+`cap_net_bind_service` to `rootlesskit` so rootless Docker can bind ports `80`
+and `443`.
 
-- `docker-ce`
-- `docker-ce-cli`
-- `containerd.io`
-- `docker-buildx-plugin`
-- `docker-compose-plugin`
+`resize_main_disk.sh` extends `/dev/mapper/ubuntu--vg-ubuntu--lv` to use all
+free space in the volume group, then resizes the filesystem. This is specific to
+the current Ubuntu LVM layout and should be reviewed before reuse.
 
-It uses `sudo`, updates APT package indexes, writes
-`/etc/apt/sources.list.d/docker.sources`, and stores Docker's signing key in
-`/etc/apt/keyrings/docker.asc`.
+`configure_firewall.sh` rebuilds IPv4 and IPv6 filter rules from scratch. It
+keeps inbound access limited to established connections, loopback, ICMP, SSH,
+HTTP, and HTTPS, then persists the rules with `iptables-persistent`.
 
-### `make_docker_rootless.sh`
+## Manual Host Configuration
 
-Installs `uidmap`, runs Docker's rootless setup tool, and disables the system
-Docker service and socket:
+### Lid behavior
 
-```bash
-dockerd-rootless-setuptool.sh install
-sudo systemctl disable --now docker.service docker.socket docker
-```
+Because the host is a laptop, `systemd-logind` should be configured so the
+machine keeps running when the lid is closed.
 
-After this step, Docker is expected to run as the current user through the
-rootless Docker user service.
-
-### `allow_privileged_ports_to_rootless_docker.sh`
-
-Allows rootless Docker to bind low ports such as `80` and `443` by granting
-`cap_net_bind_service` to the `rootlesskit` binary found in the current user's
-`PATH`.
-
-It then restarts the rootless Docker user service:
+Edit:
 
 ```bash
-systemctl --user restart docker
+sudo nano /etc/systemd/logind.conf
 ```
 
-### `resize_main_disk.sh`
+Set:
 
-Extends the logical volume at:
-
-```text
-/dev/mapper/ubuntu--vg-ubuntu--lv
+```ini
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+LidSwitchIgnoreInhibited=no
 ```
 
-Then it resizes the filesystem with `resize2fs`.
-
-This assumes the server uses the default Ubuntu LVM path above and that the
-volume group has free space available. Run it only after checking the target
-host's disk layout.
-
-### `configure_firewall.sh`
-
-Rebuilds the IPv4 and IPv6 filter firewall rules from scratch.
-
-It flushes existing filter rules, deletes custom chains, sets default policies,
-and then allows only:
-
-- established and related connections
-- loopback traffic
-- ICMP / IPv6 ICMP
-- TCP port `22`
-- TCP port `80`
-- TCP port `443`
-
-It installs `iptables-persistent` when missing, saves rules to
-`/etc/iptables/rules.v4` and `/etc/iptables/rules.v6`, then enables and restarts
-`netfilter-persistent` when `systemctl` is available.
-
-## Utility Scripts
-
-### `utils/generate_ed25519_ssh_key.sh`
-
-Accepts an email address argument and is intended to help generate an SSH key:
+Apply the change by restarting `systemd-logind` or rebooting:
 
 ```bash
-bash utils/generate_ed25519_ssh_key.sh you@example.com
+sudo systemctl restart systemd-logind
 ```
 
-At the moment, this script validates that an email argument was passed but does
-not actually call `ssh-keygen`.
+```bash
+sudo reboot
+```
+
+### Remote administration
+
+SSH access should be configured separately so the server can be administered
+from another computer on the local network. Either key-based or password-based
+authentication can be used depending on the environment.
 
 ## Environment
 
-Create a local `.env` from the example file:
+Create a local `.env` file:
 
 ```bash
 cp .env-example .env
 ```
 
-Then edit `.env` for the target host.
-
 Important values:
 
-- `DOMAIN`: base domain used by Caddy, for example `home.local`
+- `DOMAIN`: local base domain, for example `home.local`
 - `REDIRECT_SCHEME`: `http` or `https`
 - `CADDY_DATA_FOLDER`: persistent Caddy data directory
 - `CADDY_CONFIG_FOLDER`: persistent Caddy config directory
 - `FILE_BROWSER_SRV_FOLDER`: files exposed through File Browser
 - `FILE_BROWSER_DATABASE_FOLDER`: File Browser database directory
 - `FILE_BROWSER_CONFIG_FOLDER`: File Browser config directory
-- `MEDICAL_MANAGER_BETTER_AUTH_URL`: public Medical Manager auth URL
-- `MEDICAL_MANAGER_BETTER_AUTH_SECRET`: long random secret
+- `MEDICAL_MANAGER_BETTER_AUTH_URL`: Medical Manager auth URL
+- `MEDICAL_MANAGER_BETTER_AUTH_SECRET`: application secret
 - `MEDICAL_MANAGER_POSTGRES_PASSWORD`: Postgres password
 - `MEDICAL_MANAGER_POSTGRES_DATA_FOLDER`: Postgres data directory
 - `MEDICAL_MANAGER_DOCUMENTS_FOLDER`: uploaded documents directory
 - `MEDICAL_MANAGER_TELEGRAM_BOT_TOKEN`: optional Telegram bot token
 - `LOG_LEVEL`: service log level
 
-Compose will fail fast if required Medical Manager secrets are missing.
+Compose is configured to fail fast when required Medical Manager secrets are
+missing.
 
-## Run Services
+## Running The Stack
 
-Validate the Compose file and resolved environment:
+Validate the resolved Compose configuration:
 
 ```bash
 docker compose config
 ```
 
-Start the services:
+Start services:
 
 ```bash
 docker compose up -d
 ```
 
-Check running containers:
+Check status:
 
 ```bash
 docker compose ps
@@ -209,9 +197,9 @@ Stop services:
 docker compose down
 ```
 
-## Manual Validation
+## Validation
 
-After changing shell scripts:
+Shell scripts can be checked with:
 
 ```bash
 bash -n full_setup.sh
@@ -220,9 +208,20 @@ bash -n configure_firewall.sh
 bash -n utils/generate_ed25519_ssh_key.sh
 ```
 
-After changing Compose or Caddy configuration:
+Compose and Caddy-related changes should be validated with:
 
 ```bash
 docker compose config
 ```
+
+## Security Notes
+
+This repository is designed for a local-only home server. It does not include
+public exposure, TLS automation for an internet-facing domain, VPN setup, or
+dynamic DNS configuration.
+
+Medical Manager is a self-built prototype (entirely vibe coded) application used to track family
+medical information. It has not yet gone through a dedicated security review,
+so it should be treated as experimental software and used carefully. Do not
+expose it to the internet.
 
