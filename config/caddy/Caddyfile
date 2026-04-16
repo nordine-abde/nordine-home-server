@@ -11,6 +11,7 @@
 	root * /srv
 
 	redir /filebrowser {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN}
+	redir /kanboard {$REDIRECT_SCHEME:http}://kanboard.{$DOMAIN}
 	redir /medical-manager {$REDIRECT_SCHEME:http}://medical-manager.{$DOMAIN}
 
 	file_server
@@ -18,6 +19,10 @@
 
 {$REDIRECT_SCHEME:http}://filebrowser.{$DOMAIN} {
 	reverse_proxy filebrowser:80
+}
+
+{$REDIRECT_SCHEME:http}://kanboard.{$DOMAIN} {
+	reverse_proxy kanboard:80
 }
 
 {$REDIRECT_SCHEME:http}://medical-manager.{$DOMAIN} {

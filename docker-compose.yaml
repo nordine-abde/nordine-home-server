@@ -80,7 +80,24 @@ services:
     restart: unless-stopped
     networks:
       - internal_server_net
+  kanboard:
+    image: docker.io/kanboard/kanboard:v1.2.48
+    container_name: kanboard
+    restart: unless-stopped
+    volumes:
+      - kanboard-data:/var/www/app/data
+      - kanboard-plugins:/var/www/app/plugins
+      - kanboard-config:/var/www/app/config
+      - kanboard-ssl:/var/www/app/ssl
+    networks:
+      - internal_server_net
 
 networks:
   internal_server_net:
     name: internal_server_net
+
+volumes:
+  kanboard-data:
+  kanboard-plugins:
+  kanboard-config:
+  kanboard-ssl:

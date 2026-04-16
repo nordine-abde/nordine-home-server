@@ -21,6 +21,7 @@ Main components:
 - Docker Compose for service orchestration
 - Caddy as the internal reverse proxy and static web server
 - File Browser for local file access
+- Kanboard for local project boards
 - Medical Manager backend, frontend, and Postgres database
 
 DNS and hostname resolution are intentionally left outside the repository. They
@@ -41,6 +42,7 @@ a small home server.
 
 - `caddy`: reverse proxy and static web server
 - `filebrowser`: browser-based file manager
+- `kanboard`: local Kanban board
 - `medical-manager-backend`: backend built from
   `https://github.com/nordine-abde/medical-manager.git#main:backend`
 - `medical-manager-postgres`: Postgres database for Medical Manager
@@ -53,7 +55,9 @@ Routing:
 
 - `${REDIRECT_SCHEME}://${DOMAIN}` serves the landing page
 - `/filebrowser` redirects to `filebrowser.${DOMAIN}`
+- `/kanboard` redirects to `kanboard.${DOMAIN}`
 - `/medical-manager` redirects to `medical-manager.${DOMAIN}`
+- `kanboard.${DOMAIN}` proxies to the Kanboard container
 - `medical-manager.${DOMAIN}/api/*` proxies to the backend container
 
 ## Host Setup
@@ -224,4 +228,3 @@ Medical Manager is a self-built prototype (entirely vibe coded) application used
 medical information. It has not yet gone through a dedicated security review,
 so it should be treated as experimental software and used carefully. Do not
 expose it to the internet.
-
