@@ -70,14 +70,49 @@ services:
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
+    depends_on:
+      filebrowser-bootstrap:
+        condition: service_completed_successfully
     # Rootless Docker maps container root to the host user; the image default UID
     # cannot write host-user-owned bind mounts.
     user: "0:0"
+    command: ["--root", "/srv", "--database", "/database/filebrowser.db"]
     volumes:
       - ${FILE_BROWSER_SRV_FOLDER}:/srv
       - ${FILE_BROWSER_DATABASE_FOLDER}:/database
       - ${FILE_BROWSER_CONFIG_FOLDER}:/config
     restart: unless-stopped
+    networks:
+      - internal_server_net
+  filebrowser-bootstrap:
+    image: filebrowser/filebrowser
+    user: "0:0"
+    network_mode: none
+    entrypoint: ["/bin/sh", "/bootstrap/bootstrap_scans_access.sh"]
+    environment:
+      FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS: ${FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS:-true}
+      FILE_BROWSER_SHARED_SCAN_PATH: ${FILE_BROWSER_SHARED_SCAN_PATH:-/scans}
+    volumes:
+      - ${FILE_BROWSER_SRV_FOLDER}:/srv
+      - ${FILE_BROWSER_DATABASE_FOLDER}:/database
+      - ./config/filebrowser/bootstrap_scans_access.sh:/bootstrap/bootstrap_scans_access.sh:ro
+    restart: "no"
+  ftp-scans:
+    image: stilliard/pure-ftpd:hardened
+    container_name: ftp-scans
+    restart: unless-stopped
+    environment:
+      PUBLICHOST: ${FTP_PUBLIC_HOST:-${DOMAIN}}
+      FTP_USER_NAME: ${FTP_SCANS_USER:-scanner}
+      FTP_USER_PASS: ${FTP_SCANS_PASSWORD:?Set FTP_SCANS_PASSWORD in .env}
+      FTP_USER_HOME: /home/scanner
+      FTP_PASSIVE_PORTS: 30000:30009
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009"
+    volumes:
+      - ${FILE_BROWSER_SRV_FOLDER}/scans:/home/scanner
+      - ${FTP_PASSWD_FOLDER:-./data/ftp/passwd}:/etc/pure-ftpd/passwd
     networks:
       - internal_server_net
   kanboard:

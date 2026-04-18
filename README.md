@@ -21,6 +21,7 @@ Main components:
 - Docker Compose for service orchestration
 - Caddy as the internal reverse proxy and static web server
 - File Browser for local file access
+- FTP drop box for printer scans
 - Kanboard for local project boards
 - Medical Manager backend, frontend, and Postgres database
 
@@ -42,6 +43,7 @@ a small home server.
 
 - `caddy`: reverse proxy and static web server
 - `filebrowser`: browser-based file manager
+- `ftp-scans`: FTP endpoint for printer scan uploads into File Browser
 - `kanboard`: local Kanban board
 - `medical-manager-backend`: backend built from
   `https://github.com/nordine-abde/medical-manager.git#main:backend`
@@ -92,8 +94,8 @@ Docker Engine, Buildx, and the Compose plugin.
 and disables the system Docker service and socket.
 
 `allow_privileged_ports_to_rootless_docker.sh` grants
-`cap_net_bind_service` to `rootlesskit` so rootless Docker can bind ports `80`
-and `443`.
+`cap_net_bind_service` to `rootlesskit` so rootless Docker can bind privileged
+ports such as `21`, `80`, and `443`.
 
 `resize_main_disk.sh` extends `/dev/mapper/ubuntu--vg-ubuntu--lv` to use all
 free space in the volume group, then resizes the filesystem. This is specific to
@@ -101,7 +103,8 @@ the current Ubuntu LVM layout and should be reviewed before reuse.
 
 `configure_firewall.sh` rebuilds IPv4 and IPv6 filter rules from scratch. It
 keeps inbound access limited to established connections, loopback, ICMP, SSH,
-HTTP, and HTTPS, then persists the rules with `iptables-persistent`.
+FTP, HTTP, HTTPS, and the configured FTP passive data ports, then persists the
+rules with `iptables-persistent`.
 
 ## Manual Host Configuration
 
@@ -158,6 +161,13 @@ Important values:
 - `FILE_BROWSER_SRV_FOLDER`: files exposed through File Browser
 - `FILE_BROWSER_DATABASE_FOLDER`: File Browser database directory
 - `FILE_BROWSER_CONFIG_FOLDER`: File Browser config directory
+- `FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS`: updates existing File Browser users
+  to root scope so `/scans` is visible to everyone
+- `FILE_BROWSER_SHARED_SCAN_PATH`: File Browser path used for printer scans
+- `FTP_PUBLIC_HOST`: hostname or LAN IP address printers use for FTP passive mode
+- `FTP_SCANS_USER`: FTP username for printer uploads
+- `FTP_SCANS_PASSWORD`: FTP password for printer uploads
+- `FTP_PASSWD_FOLDER`: persistent FTP virtual-user database directory
 - `MEDICAL_MANAGER_BETTER_AUTH_URL`: Medical Manager auth URL
 - `MEDICAL_MANAGER_BETTER_AUTH_SECRET`: application secret
 - `MEDICAL_MANAGER_POSTGRES_PASSWORD`: Postgres password
@@ -168,6 +178,26 @@ Important values:
 
 Compose is configured to fail fast when required Medical Manager secrets are
 missing.
+
+## Printer Scan Uploads
+
+`ftp-scans` exposes FTP on port `21` and passive data ports `30000-30009`.
+Printer scans are stored in `${FILE_BROWSER_SRV_FOLDER}/scans`, which appears
+as `/scans` in File Browser.
+
+`filebrowser-bootstrap` makes this reproducible by creating the scan folder,
+adding a global allow rule for `/scans`, and updating existing File Browser
+users to scope `/` when `FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS=true`.
+
+Configure the printer with:
+
+- Host: the server LAN address, or the value of `FTP_PUBLIC_HOST`
+- Port: `21`
+- Protocol: FTP
+- Passive mode: enabled, if the printer offers the option
+- Username: `FTP_SCANS_USER`
+- Password: `FTP_SCANS_PASSWORD`
+- Remote folder: `/`
 
 ## Running The Stack
 

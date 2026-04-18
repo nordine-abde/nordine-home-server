@@ -31,13 +31,17 @@ reset_filter_table ip6tables
 
 sudo iptables -A INPUT -p icmp -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 21 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 30000:30009 -j ACCEPT
 
 sudo ip6tables -A INPUT -p ipv6-icmp -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 22 -j ACCEPT
+sudo ip6tables -A INPUT -p tcp --dport 21 -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
 sudo ip6tables -A INPUT -p tcp --dport 443 -j ACCEPT
+sudo ip6tables -A INPUT -p tcp --dport 30000:30009 -j ACCEPT
 
 if ! dpkg -s iptables-persistent >/dev/null 2>&1; then
   sudo apt update
