@@ -164,6 +164,8 @@ Important values:
 - `FILE_BROWSER_SRV_FOLDER`: files exposed through File Browser
 - `FILE_BROWSER_DATABASE_FOLDER`: File Browser database directory
 - `FILE_BROWSER_CONFIG_FOLDER`: File Browser config directory
+- `FILE_BROWSER_ADMIN_PASSWORD`: optional admin password applied to the File
+  Browser `admin` user on bootstrap
 - `FILE_BROWSER_BOOTSTRAP_USERS`: comma-separated File Browser users to create,
   using `username:password` entries
 - `FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS`: comma-separated shared folders to
@@ -212,22 +214,26 @@ File Browser users are application users stored in
 To create users and shared folders automatically when the stack starts, set:
 
 ```env
+FILE_BROWSER_ADMIN_PASSWORD=replace-with-a-strong-admin-password
 FILE_BROWSER_BOOTSTRAP_USERS=user1:replace-with-a-strong-password,user2:replace-with-another-password
 FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS=/scans:Scans,/documents:Documents
 FILE_BROWSER_MINIMUM_PASSWORD_LENGTH=12
 ```
 
-On bootstrap, this creates `${FILE_BROWSER_SRV_FOLDER}/home/user1` and
+On bootstrap, this creates or updates the File Browser `admin` user when
+`FILE_BROWSER_ADMIN_PASSWORD` is set. It also creates
+`${FILE_BROWSER_SRV_FOLDER}/home/user1` and
 `${FILE_BROWSER_SRV_FOLDER}/home/user2`, scopes the users to `/home/user1` and
 `/home/user2`, creates `/scans` and `/documents`, and links both shared folders
 into both user homes.
 
-Existing users keep their current password. If a listed user already exists,
-bootstrap only updates that user's scope and shared-folder links. If a listed
-user does not exist, the `username:password` entry must include a password.
-When `FILE_BROWSER_BOOTSTRAP_USERS` is empty and no File Browser database
-exists yet, bootstrap only prepares shared directories and leaves first-run
-database setup to File Browser.
+Existing non-admin users keep their current password. If a listed user already
+exists, bootstrap only updates that user's scope and shared-folder links. If a
+listed user does not exist, the `username:password` entry must include a
+password. When both `FILE_BROWSER_ADMIN_PASSWORD` and
+`FILE_BROWSER_BOOTSTRAP_USERS` are empty and no File Browser database exists
+yet, bootstrap only prepares shared directories and leaves first-run database
+setup to File Browser.
 
 `FILE_BROWSER_MINIMUM_PASSWORD_LENGTH` is applied to the File Browser database
 on each bootstrap run. It affects new passwords; existing passwords are not

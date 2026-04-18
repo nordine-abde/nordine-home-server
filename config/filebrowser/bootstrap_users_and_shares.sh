@@ -3,6 +3,7 @@
 set -eu
 
 database="${FILE_BROWSER_DATABASE:-/database/filebrowser.db}"
+admin_password="${FILE_BROWSER_ADMIN_PASSWORD:-}"
 users="${FILE_BROWSER_BOOTSTRAP_USERS:-}"
 shared_folders="${FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS:-/scans:Scans}"
 minimum_password_length="${FILE_BROWSER_MINIMUM_PASSWORD_LENGTH:-12}"
@@ -64,14 +65,14 @@ ensure_filebrowser_config() {
   validate_minimum_password_length
 
   if [ ! -f "$database" ]; then
-    if [ -n "$users" ]; then
+    if [ -n "$admin_password" ] || [ -n "$users" ]; then
       filebrowser -d "$database" config init \
         --root /srv \
         --createUserDir \
         --minimumPasswordLength "$minimum_password_length" >/dev/null
       database_available=true
     else
-      echo "File Browser database does not exist and no FILE_BROWSER_BOOTSTRAP_USERS are configured."
+      echo "File Browser database does not exist and no File Browser users are configured."
       echo "Leaving first-run database setup to File Browser."
     fi
   else
@@ -80,6 +81,33 @@ ensure_filebrowser_config() {
       --createUserDir \
       --minimumPasswordLength "$minimum_password_length" >/dev/null
     database_available=true
+  fi
+}
+
+ensure_admin_user() {
+  if [ -z "$admin_password" ]; then
+    return
+  fi
+
+  if [ "$database_available" != "true" ]; then
+    echo "Cannot configure admin user without a File Browser database." >&2
+    exit 1
+  fi
+
+  if user_exists "admin"; then
+    filebrowser -d "$database" users update \
+      admin \
+      --password "$admin_password" \
+      --scope / \
+      --perm.admin >/dev/null
+    echo "Updated File Browser admin user."
+  else
+    filebrowser -d "$database" users add \
+      admin \
+      "$admin_password" \
+      --scope / \
+      --perm.admin >/dev/null
+    echo "Created File Browser admin user."
   fi
 }
 
@@ -158,6 +186,7 @@ ensure_user() {
 }
 
 ensure_filebrowser_config
+ensure_admin_user
 
 if [ -n "$shared_folders" ]; then
   echo "$shared_folders" | tr ',' '\n' | while IFS= read -r shared_spec; do
