@@ -5,6 +5,7 @@ set -eu
 database="${FILE_BROWSER_DATABASE:-/database/filebrowser.db}"
 users="${FILE_BROWSER_BOOTSTRAP_USERS:-}"
 shared_folders="${FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS:-/scans:Scans}"
+minimum_password_length="${FILE_BROWSER_MINIMUM_PASSWORD_LENGTH:-12}"
 database_available=false
 
 validate_simple_name() {
@@ -43,6 +44,15 @@ validate_shared_path() {
   esac
 }
 
+validate_minimum_password_length() {
+  case "$minimum_password_length" in
+    ""|*[!0-9]*)
+      echo "FILE_BROWSER_MINIMUM_PASSWORD_LENGTH must be a non-negative integer." >&2
+      exit 1
+      ;;
+  esac
+}
+
 user_exists() {
   username="$1"
 
@@ -51,16 +61,24 @@ user_exists() {
 }
 
 ensure_filebrowser_config() {
+  validate_minimum_password_length
+
   if [ ! -f "$database" ]; then
     if [ -n "$users" ]; then
-      filebrowser -d "$database" config init --root /srv --createUserDir >/dev/null
+      filebrowser -d "$database" config init \
+        --root /srv \
+        --createUserDir \
+        --minimumPasswordLength "$minimum_password_length" >/dev/null
       database_available=true
     else
       echo "File Browser database does not exist and no FILE_BROWSER_BOOTSTRAP_USERS are configured."
       echo "Leaving first-run database setup to File Browser."
     fi
   else
-    filebrowser -d "$database" config set --root /srv --createUserDir >/dev/null
+    filebrowser -d "$database" config set \
+      --root /srv \
+      --createUserDir \
+      --minimumPasswordLength "$minimum_password_length" >/dev/null
     database_available=true
   fi
 }

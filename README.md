@@ -168,6 +168,8 @@ Important values:
   using `username:password` entries
 - `FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS`: comma-separated shared folders to
   create and link into each bootstrapped user home, using `/path:Alias` entries
+- `FILE_BROWSER_MINIMUM_PASSWORD_LENGTH`: minimum password length enforced by
+  File Browser for new users
 - `FTP_PUBLIC_HOST`: hostname or LAN IP address printers use for FTP passive mode
 - `FTP_SCANS_USER`: FTP username for printer uploads
 - `FTP_SCANS_PASSWORD`: FTP password for printer uploads
@@ -212,6 +214,7 @@ To create users and shared folders automatically when the stack starts, set:
 ```env
 FILE_BROWSER_BOOTSTRAP_USERS=user1:replace-with-a-strong-password,user2:replace-with-another-password
 FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS=/scans:Scans,/documents:Documents
+FILE_BROWSER_MINIMUM_PASSWORD_LENGTH=12
 ```
 
 On bootstrap, this creates `${FILE_BROWSER_SRV_FOLDER}/home/user1` and
@@ -225,6 +228,10 @@ user does not exist, the `username:password` entry must include a password.
 When `FILE_BROWSER_BOOTSTRAP_USERS` is empty and no File Browser database
 exists yet, bootstrap only prepares shared directories and leaves first-run
 database setup to File Browser.
+
+`FILE_BROWSER_MINIMUM_PASSWORD_LENGTH` is applied to the File Browser database
+on each bootstrap run. It affects new passwords; existing passwords are not
+rewritten.
 
 For one-off users or later changes, run:
 
