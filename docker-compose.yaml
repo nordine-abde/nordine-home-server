@@ -9,6 +9,8 @@ services:
       DOMAIN: ${DOMAIN}
       REDIRECT_SCHEME: ${REDIRECT_SCHEME:-http}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ROUTER_CONFIG: ${ROUTER_CONFIG:?Set ROUTER_CONFIG in .env}
+      PRINTER_CONFIG: ${PRINTER_CONFIG:?Set PRINTER_CONFIG in .env}
     ports:
       - "80:80"
       - "443:443"

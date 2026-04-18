@@ -59,6 +59,7 @@ Routing:
 - `/filebrowser` redirects to `filebrowser.${DOMAIN}`
 - `/kanboard` redirects to `kanboard.${DOMAIN}`
 - `/medical-manager` redirects to `medical-manager.${DOMAIN}`
+- `ROUTER_CONFIG` and `PRINTER_CONFIG` populate landing-page links
 - `kanboard.${DOMAIN}` proxies to the Kanboard container
 - `medical-manager.${DOMAIN}/api/*` proxies to the backend container
 
@@ -156,6 +157,8 @@ Important values:
 
 - `DOMAIN`: local base domain, for example `home.local`
 - `REDIRECT_SCHEME`: `http` or `https`
+- `ROUTER_CONFIG`: router admin URL shown on the landing page
+- `PRINTER_CONFIG`: printer admin URL shown on the landing page
 - `CADDY_DATA_FOLDER`: persistent Caddy data directory
 - `CADDY_CONFIG_FOLDER`: persistent Caddy config directory
 - `FILE_BROWSER_SRV_FOLDER`: files exposed through File Browser
