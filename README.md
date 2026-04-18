@@ -164,9 +164,10 @@ Important values:
 - `FILE_BROWSER_SRV_FOLDER`: files exposed through File Browser
 - `FILE_BROWSER_DATABASE_FOLDER`: File Browser database directory
 - `FILE_BROWSER_CONFIG_FOLDER`: File Browser config directory
-- `FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS`: updates existing File Browser users
-  to root scope so `/scans` is visible to everyone
-- `FILE_BROWSER_SHARED_SCAN_PATH`: File Browser path used for printer scans
+- `FILE_BROWSER_BOOTSTRAP_USERS`: comma-separated File Browser users to create,
+  using `username:password` entries
+- `FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS`: comma-separated shared folders to
+  create and link into each bootstrapped user home, using `/path:Alias` entries
 - `FTP_PUBLIC_HOST`: hostname or LAN IP address printers use for FTP passive mode
 - `FTP_SCANS_USER`: FTP username for printer uploads
 - `FTP_SCANS_PASSWORD`: FTP password for printer uploads
@@ -186,11 +187,11 @@ missing.
 
 `ftp-scans` exposes FTP on port `21` and passive data ports `30000-30009`.
 Printer scans are stored in `${FILE_BROWSER_SRV_FOLDER}/scans`, which appears
-as `/scans` in File Browser.
+as `/scans` in File Browser and can be linked into configured user homes.
 
-`filebrowser-bootstrap` makes this reproducible by creating the scan folder,
-adding a global allow rule for `/scans`, and updating existing File Browser
-users to scope `/` when `FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS=true`.
+`filebrowser-bootstrap` creates configured shared folders, enables File
+Browser's `createUserDir` setting, creates configured users, scopes them to
+`/home/<user>`, and links each shared folder into each bootstrapped user home.
 
 Configure the printer with:
 
@@ -201,6 +202,58 @@ Configure the printer with:
 - Username: `FTP_SCANS_USER`
 - Password: `FTP_SCANS_PASSWORD`
 - Remote folder: `/`
+
+## File Browser Users
+
+File Browser users are application users stored in
+`${FILE_BROWSER_DATABASE_FOLDER}/filebrowser.db`; they are not Linux accounts.
+To create users and shared folders automatically when the stack starts, set:
+
+```env
+FILE_BROWSER_BOOTSTRAP_USERS=user1:replace-with-a-strong-password,user2:replace-with-another-password
+FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS=/scans:Scans,/documents:Documents
+```
+
+On bootstrap, this creates `${FILE_BROWSER_SRV_FOLDER}/home/user1` and
+`${FILE_BROWSER_SRV_FOLDER}/home/user2`, scopes the users to `/home/user1` and
+`/home/user2`, creates `/scans` and `/documents`, and links both shared folders
+into both user homes.
+
+Existing users keep their current password. If a listed user already exists,
+bootstrap only updates that user's scope and shared-folder links. If a listed
+user does not exist, the `username:password` entry must include a password.
+When `FILE_BROWSER_BOOTSTRAP_USERS` is empty and no File Browser database
+exists yet, bootstrap only prepares shared directories and leaves first-run
+database setup to File Browser.
+
+For one-off users or later changes, run:
+
+```bash
+./create_filebrowser_user.sh user1 /scans:Scans
+```
+
+This creates `${FILE_BROWSER_SRV_FOLDER}/home/user1`, creates or updates the
+File Browser user `user1` with scope `/home/user1`, and links `/scans` into the
+user home as `Scans`. The script also enables File Browser's `createUserDir`
+database setting so future user creation defaults create user directories.
+
+For non-interactive use, provide the new-user password through the environment:
+
+```bash
+FILE_BROWSER_NEW_USER_PASSWORD='replace-with-a-strong-password' \
+  ./create_filebrowser_user.sh user1 /scans:Scans
+```
+
+By default, shared folders are attached with relative symlinks. If File Browser
+or a future policy rejects symlinks outside the scoped home, use host bind
+mounts instead:
+
+```bash
+./create_filebrowser_user.sh --mode bind user1 /scans:Scans
+```
+
+Bind mounts may require `sudo` and are not persistent across reboot unless they
+are also configured in `/etc/fstab` or a systemd mount unit.
 
 ## Running The Stack
 

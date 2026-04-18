@@ -90,14 +90,14 @@ services:
     image: filebrowser/filebrowser
     user: "0:0"
     network_mode: none
-    entrypoint: ["/bin/sh", "/bootstrap/bootstrap_scans_access.sh"]
+    entrypoint: ["/bin/sh", "/bootstrap/bootstrap_users_and_shares.sh"]
     environment:
-      FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS: ${FILE_BROWSER_GRANT_SCANS_TO_ALL_USERS:-true}
-      FILE_BROWSER_SHARED_SCAN_PATH: ${FILE_BROWSER_SHARED_SCAN_PATH:-/scans}
+      FILE_BROWSER_BOOTSTRAP_USERS: ${FILE_BROWSER_BOOTSTRAP_USERS:-}
+      FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS: ${FILE_BROWSER_BOOTSTRAP_SHARED_FOLDERS:-/scans:Scans}
     volumes:
       - ${FILE_BROWSER_SRV_FOLDER}:/srv
       - ${FILE_BROWSER_DATABASE_FOLDER}:/database
-      - ./config/filebrowser/bootstrap_scans_access.sh:/bootstrap/bootstrap_scans_access.sh:ro
+      - ./config/filebrowser/bootstrap_users_and_shares.sh:/bootstrap/bootstrap_users_and_shares.sh:ro
     restart: "no"
   ftp-scans:
     image: stilliard/pure-ftpd:hardened
